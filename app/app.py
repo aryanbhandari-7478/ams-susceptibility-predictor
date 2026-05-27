@@ -149,7 +149,7 @@ st.markdown('<div class="main-header">🏔️ AMS Susceptibility Prediction</div
 st.markdown('<div class="sub-header">Logistic Regression · Baseline Transcriptomic + Physiological Features · Nested LOOCV Validated</div>', unsafe_allow_html=True)
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs(["🔮 Predict", "📊 Batch Predict (CSV)", "📈 Model Info", "📋 About"])
+tab1, tab2, tab3 = st.tabs([ "📊 Batch Predict (CSV)", "📈 Model Info", "📋 About"])
 
 
 
