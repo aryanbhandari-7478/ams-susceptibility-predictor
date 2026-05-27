@@ -608,7 +608,7 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         return ""
 
                     st.dataframe(
-                        results_df.style.applymap(style_prediction, subset=["AMS_Prediction"]),
+                        results_df.style.map(style_prediction, subset=["AMS_Prediction"]),
                         use_container_width=True,
                         height=min(400, 60 + 35 * n_complete),
                     )
