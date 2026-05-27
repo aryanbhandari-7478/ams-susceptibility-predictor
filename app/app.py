@@ -372,10 +372,10 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     preds = model2.predict(X_sc)
 
                     def risk_level(p):
-                        if p < 0.30:   return "🟢 Low"
-                        elif p < 0.50: return "🟡 Moderate"
-                        elif p < 0.70: return "🟠 High"
-                        else:          return "🔴 Very High"
+                        if p < 0.30:   return "Low"
+                        elif p < 0.50: return "Moderate"
+                        elif p < 0.70: return "High"
+                        else:          return "Very High"
 
                     results_df = pd.DataFrame({
                         "subject_id":      complete_df["subject_id"].values,
@@ -383,7 +383,7 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         "P(AMS+)":         probs.round(4),
                         "P(AMS-)":         (1 - probs).round(4),
                         "Risk_Level":      [risk_level(p) for p in probs],
-                        "Status":          ["✅ Predicted"] * n_complete,
+                        "Status":          ["Predicted"] * n_complete,
                     })
 
                     # Style the results table
@@ -488,7 +488,7 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     )
                     all_report["Missing_Values"] = missing_per_subject.values
                     all_report["Status"] = all_report["subject_id"].map(
-                        lambda s: "✅ Predicted" if s in pred_map else "⚠️ Skipped (incomplete data)"
+                        lambda s: "Predicted" if s in pred_map else "Skipped !! (incomplete data)"
                     )
 
                     def style_status(val):
