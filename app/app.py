@@ -27,90 +27,110 @@ st.markdown("""
     .main-header {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #1a1a2e;
+        color: #FFFFFF;
         margin-bottom: 0.2rem;
     }
+    .sub-header {
+        font-size: 1.0rem;
+        color: #E0E0E0;
+        margin-bottom: 1.5rem;
+    }
+    h2 {
+        color: #7EB8F7 !important;
+        font-weight: 800 !important;
+    }
     h3 {
-    color: #0d1b4b !important;
-    font-weight: 700 !important;
-    font-size: 1.15rem !important;
-    margin-top: 1.2rem !important;
-    margin-bottom: 0.5rem !important;
-}
-
-h2 {
-    color: #0d1b4b !important;
-    font-weight: 800 !important;
-}
-
-.main-header {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #0a0a23;
-    margin-bottom: 0.2rem;
-}
-
-.sub-header {
-    font-size: 1.0rem;
-    color: #333333;
-    margin-bottom: 1.5rem;
-}
+        color: #7EB8F7 !important;
+        font-weight: 700 !important;
+        font-size: 1.15rem !important;
+        margin-top: 1.2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
     .risk-high {
         background: linear-gradient(135deg, #ff4b4b22, #ff4b4b44);
-        border: 2px solid #D62728;
+        border: 2px solid #FF6B6B;
         border-radius: 12px;
         padding: 1.2rem 1.5rem;
         text-align: center;
     }
     .risk-low {
-        background: linear-gradient(135deg, #1F77B422, #1F77B444);
-        border: 2px solid #1F77B4;
+        background: linear-gradient(135deg, #4FC3F722, #4FC3F744);
+        border: 2px solid #4FC3F7;
         border-radius: 12px;
         padding: 1.2rem 1.5rem;
         text-align: center;
     }
     .metric-card {
-        background: #f8f9fa;
+        background: #1e1e2e;
         border-radius: 8px;
         padding: 0.8rem 1rem;
-        border-left: 4px solid #4C72B0;
+        border-left: 4px solid #7EB8F7;
         margin-bottom: 0.5rem;
     }
     .section-header {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #1a1a2e;
-        border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 0.3rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #7EB8F7;
+        border-bottom: 3px solid #7EB8F7;
+        padding-bottom: 0.4rem;
         margin-top: 1.5rem;
         margin-bottom: 1rem;
+        letter-spacing: 0.01em;
     }
     .info-box {
-        background: #e8f4fd;
-        border-left: 4px solid #2196F3;
+        background: #1a3a5c;
+        border-left: 4px solid #4FC3F7;
         padding: 0.8rem 1rem;
         border-radius: 0 8px 8px 0;
         font-size: 0.9rem;
-        color: #1565C0;
+        color: #B3E5FC;
     }
     .warning-box {
-        background: #fff8e1;
-        border-left: 4px solid #FFC107;
+        background: #3a2e00;
+        border-left: 4px solid #FFD54F;
         padding: 0.8rem 1rem;
         border-radius: 0 8px 8px 0;
         font-size: 0.9rem;
-        color: #795548;
+        color: #FFE082;
     }
     div[data-testid="stSidebar"] {
-        background: #f0f2f6;
+        background: #0f0f1a;
     }
     .stTabs [data-baseweb="tab"] {
         font-size: 0.95rem;
         font-weight: 500;
+        color: #B0C4DE;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #7EB8F7 !important;
+        border-bottom: 3px solid #7EB8F7 !important;
+    }
+    p, li {
+        color: #E0E0E0;
+    }
+    .stMarkdown p {
+        color: #E0E0E0 !important;
+    }
+    thead tr th {
+        color: #7EB8F7 !important;
+        font-weight: 700 !important;
+        background-color: #1a1a2e !important;
+    }
+    tbody tr td {
+        color: #E0E0E0 !important;
+    }
+    code {
+        color: #FFD54F !important;
+        background-color: #2a2a3e !important;
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+    }
+    .stMetric label {
+        color: #B0C4DE !important;
+        font-weight: 600 !important;
     }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ── Load model ─────────────────────────────────────────────────────────────────
 @st.cache_resource
