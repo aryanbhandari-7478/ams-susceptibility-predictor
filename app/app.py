@@ -548,7 +548,7 @@ with tab3:
         st.markdown("""
 | Stage | Detail |
 |---|---|
-| **Model** | Logistic Regression (`class_weight='balanced'`) |
+| **Model** | Logistic Regression |
 | **Solver** | SAGA |
 | **Regularisation** | L1 / L2 (selected via inner CV) |
 | **Imputation** | Median (RobustScaler) |
