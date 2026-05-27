@@ -556,7 +556,7 @@ with tab3:
 | **Evaluation** | Nested LOOCV (outer: LOO, inner: StratifiedKFold-3) |
 | **Feature matrix** | BL_full — n=21 subjects |
 | **Feature count** | 67 (60 genes + 6 physiology + sex) |
-| **Class imbalance** | AMS+: 16 / AMS-: 5 (balanced weight) |
+| **Class imbalance** | AMS+: 17 / AMS-: 4  |
 """)
 
     with col_b:
