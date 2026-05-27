@@ -30,11 +30,31 @@ st.markdown("""
         color: #1a1a2e;
         margin-bottom: 0.2rem;
     }
-    .sub-header {
-        font-size: 1.0rem;
-        color: #555;
-        margin-bottom: 1.5rem;
-    }
+    h3 {
+    color: #0d1b4b !important;
+    font-weight: 700 !important;
+    font-size: 1.15rem !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+h2 {
+    color: #0d1b4b !important;
+    font-weight: 800 !important;
+}
+
+.main-header {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0a0a23;
+    margin-bottom: 0.2rem;
+}
+
+.sub-header {
+    font-size: 1.0rem;
+    color: #333333;
+    margin-bottom: 1.5rem;
+}
     .risk-high {
         background: linear-gradient(135deg, #ff4b4b22, #ff4b4b44);
         border: 2px solid #D62728;
@@ -149,14 +169,13 @@ st.markdown('<div class="main-header">🏔️ AMS Susceptibility Prediction</div
 st.markdown('<div class="sub-header">Logistic Regression · Baseline Transcriptomic + Physiological Features · Nested LOOCV Validated</div>', unsafe_allow_html=True)
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab2, tab3, tab4 = st.tabs([ "📊 Batch Predict (CSV)", "📈 Model Info", "📋 About"])
-
+tab1, tab2 = st.tabs(["📊 Batch Predict (CSV)", "📈 Model Info"])
 
 
 # ══════════════════════════════════════════════════════════════════════
-# TAB 2 — Batch prediction via CSV / Excel
+# TAB 1 — Batch prediction via CSV / Excel
 # ══════════════════════════════════════════════════════════════════════
-with tab2:
+with tab1:
     st.markdown('<div class="section-header">📊 Batch Prediction — CSV or Excel Upload</div>', unsafe_allow_html=True)
     st.markdown("""
 Upload a **CSV or Excel file** where:
@@ -167,33 +186,32 @@ Upload a **CSV or Excel file** where:
 Subjects with **any missing cell** will be **flagged and skipped** — predictions are only made for complete records.
 """)
 
-    bundle2 = get_model_bundle()
+    bundle1 = get_model_bundle()
 
-    if bundle2 is None:
+    if bundle1 is None:
         st.markdown("""
 <div class="info-box">
 No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 </div>
 """, unsafe_allow_html=True)
-        uploaded_model2 = st.file_uploader("Upload `final_model_LR.pkl`", type=["pkl"], key="model2")
-        if uploaded_model2:
-            bundle2 = pickle.load(uploaded_model2)
+        uploaded_model1 = st.file_uploader("Upload `final_model_LR.pkl`", type=["pkl"], key="model1")
+        if uploaded_model1:
+            bundle1 = pickle.load(uploaded_model1)
 
-    if bundle2:
-        model2      = bundle2["model"]
-        imputer2    = bundle2["imputer"]
-        scaler2     = bundle2["scaler"]
-        feat_names2 = bundle2["feat_names"]
+    if bundle1:
+        model1      = bundle1["model"]
+        imputer1    = bundle1["imputer"]
+        scaler1     = bundle1["scaler"]
+        feat_names1 = bundle1["feat_names"]
 
         # ── Step 1: Template download ──────────────────────────────────────
         st.markdown("### Step 1 — Download the Input Template")
         st.markdown("Fill in this template and upload it in Step 2. Column order must be: `subject_id` then all feature columns.")
 
-        template_df = pd.DataFrame(columns=["subject_id"] + feat_names2)
-        # Add 3 example empty rows
+        template_df = pd.DataFrame(columns=["subject_id"] + feat_names1)
         example_rows = pd.DataFrame(
-            [[i] + [None] * len(feat_names2) for i in range(1, 4)],
-            columns=["subject_id"] + feat_names2,
+            [[i] + [None] * len(feat_names1) for i in range(1, 4)],
+            columns=["subject_id"] + feat_names1,
         )
         template_df = pd.concat([template_df, example_rows], ignore_index=True)
 
@@ -207,7 +225,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
             use_container_width=True,
         )
 
-        # Excel template
         try:
             import openpyxl
             from io import BytesIO
@@ -223,7 +240,7 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
         except ImportError:
             col_dl2.info("Install `openpyxl` for Excel template download.")
 
-        st.markdown(f"Template has **1 + {len(feat_names2)} columns** (subject_id + {len(feat_names2)} features).")
+        st.markdown(f"Template has **1 + {len(feat_names1)} columns** (subject_id + {len(feat_names1)} features).")
 
         st.markdown("---")
 
@@ -238,7 +255,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 
         if batch_file:
             try:
-                # ── Load file ──────────────────────────────────────────────
                 fname = batch_file.name.lower()
                 if fname.endswith(".csv"):
                     raw_df = pd.read_csv(batch_file)
@@ -247,12 +263,10 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 
                 st.markdown(f"**Loaded:** {len(raw_df)} rows × {len(raw_df.columns)} columns")
 
-                # ── Validate subject_id column ─────────────────────────────
                 if "subject_id" not in raw_df.columns:
                     st.error("❌ Column `subject_id` not found. First column must be named `subject_id`.")
                     st.stop()
 
-                # Check subject_id is non-negative integer
                 bad_ids = []
                 for idx, val in enumerate(raw_df["subject_id"]):
                     try:
@@ -268,15 +282,13 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 
                 raw_df["subject_id"] = raw_df["subject_id"].astype(int)
 
-                # Check for duplicate subject IDs
                 dupes = raw_df["subject_id"][raw_df["subject_id"].duplicated()].tolist()
                 if dupes:
                     st.warning(f"⚠️ Duplicate subject_id values found: {dupes}. Each row should be a unique subject.")
 
-                # ── Check which feature columns are present ────────────────
-                cols_in_file    = [c for c in raw_df.columns if c != "subject_id"]
-                missing_feature_cols = [f for f in feat_names2 if f not in raw_df.columns]
-                extra_cols      = [c for c in cols_in_file if c not in feat_names2]
+                cols_in_file         = [c for c in raw_df.columns if c != "subject_id"]
+                missing_feature_cols = [f for f in feat_names1 if f not in raw_df.columns]
+                extra_cols           = [c for c in cols_in_file if c not in feat_names1]
 
                 if missing_feature_cols:
                     st.error(
@@ -291,24 +303,21 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                 if extra_cols:
                     st.info(f"ℹ️ {len(extra_cols)} extra column(s) in file will be ignored: {extra_cols[:5]}{'...' if len(extra_cols)>5 else ''}")
 
-                # ── Per-subject missing value audit ────────────────────────
-                feat_df = raw_df[feat_names2].copy()
+                feat_df = raw_df[feat_names1].copy()
 
-                # Coerce to numeric — non-numeric cells become NaN
-                for col in feat_names2:
+                for col in feat_names1:
                     feat_df[col] = pd.to_numeric(feat_df[col], errors="coerce")
 
-                missing_per_subject = feat_df.isnull().sum(axis=1)  # Series: index = row
-                missing_per_col     = feat_df.isnull().sum(axis=0)  # Series: missing count per feature
+                missing_per_subject = feat_df.isnull().sum(axis=1)
+                missing_per_col     = feat_df.isnull().sum(axis=0)
 
                 complete_mask   = missing_per_subject == 0
                 incomplete_mask = ~complete_mask
 
-                n_total      = len(raw_df)
-                n_complete    = complete_mask.sum()
-                n_incomplete  = incomplete_mask.sum()
+                n_total     = len(raw_df)
+                n_complete  = complete_mask.sum()
+                n_incomplete = incomplete_mask.sum()
 
-                # ── Summary banner ─────────────────────────────────────────
                 st.markdown("---")
                 st.markdown("### Data Quality Report")
 
@@ -318,15 +327,14 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                 kpi3.metric("⚠️ Incomplete (flagged)", n_incomplete,
                             delta=f"-{n_incomplete}" if n_incomplete > 0 else None,
                             delta_color="inverse")
-                kpi4.metric("Features Required", len(feat_names2))
+                kpi4.metric("Features Required", len(feat_names1))
 
-                # ── Flagged subjects detail ────────────────────────────────
                 if n_incomplete > 0:
                     st.markdown("#### ⚠️ Flagged Subjects — Missing Data")
                     flagged_df = raw_df[incomplete_mask][["subject_id"]].copy()
                     flagged_df["Missing_Count"] = missing_per_subject[incomplete_mask].values
                     flagged_df["Missing_Features"] = [
-                        ", ".join(feat_names2[j] for j in range(len(feat_names2))
+                        ", ".join(feat_names1[j] for j in range(len(feat_names1))
                                   if pd.isnull(feat_df.iloc[i, j]))
                         for i in raw_df.index[incomplete_mask]
                     ]
@@ -340,7 +348,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         use_container_width=True,
                     )
 
-                    # Show which features have the most missing values
                     cols_with_missing = missing_per_col[missing_per_col > 0].sort_values(ascending=False)
                     if len(cols_with_missing) > 0:
                         with st.expander(f"📋 Features with missing values ({len(cols_with_missing)} features)"):
@@ -355,7 +362,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                             })
                             st.dataframe(miss_summary, use_container_width=True)
 
-                # ── Run predictions on complete subjects only ──────────────
                 if n_complete == 0:
                     st.error("❌ No subjects with complete data. Please fix missing values and re-upload.")
                 else:
@@ -365,11 +371,10 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     complete_df = raw_df[complete_mask].copy()
                     X_complete  = feat_df[complete_mask].values.astype(float)
 
-                    # Scale only (no imputation needed — data is complete)
-                    X_sc = scaler2.transform(X_complete)
+                    X_sc = scaler1.transform(X_complete)
 
-                    probs = model2.predict_proba(X_sc)[:, 1]
-                    preds = model2.predict(X_sc)
+                    probs = model1.predict_proba(X_sc)[:, 1]
+                    preds = model1.predict(X_sc)
 
                     def risk_level(p):
                         if p < 0.30:   return "Low"
@@ -378,15 +383,14 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         else:          return "Very High"
 
                     results_df = pd.DataFrame({
-                        "subject_id":      complete_df["subject_id"].values,
-                        "AMS_Prediction":  ["AMS+" if p == 1 else "AMS-" for p in preds],
-                        "P(AMS+)":         probs.round(4),
-                        "P(AMS-)":         (1 - probs).round(4),
-                        "Risk_Level":      [risk_level(p) for p in probs],
-                        "Status":          ["Predicted"] * n_complete,
+                        "subject_id":     complete_df["subject_id"].values,
+                        "AMS_Prediction": ["AMS+" if p == 1 else "AMS-" for p in preds],
+                        "P(AMS+)":        probs.round(4),
+                        "P(AMS-)":        (1 - probs).round(4),
+                        "Risk_Level":     [risk_level(p) for p in probs],
+                        "Status":         ["Predicted"] * n_complete,
                     })
 
-                    # Style the results table
                     def style_prediction(val):
                         if val == "AMS+":
                             return "color: #D62728; font-weight: bold"
@@ -400,7 +404,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         height=int(min(400, 60 + 35 * n_complete)),
                     )
 
-                    # ── Summary metrics ────────────────────────────────────
                     n_pos = (preds == 1).sum()
                     n_neg = (preds == 0).sum()
                     mean_prob = probs.mean()
@@ -413,10 +416,8 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     m3.metric("Mean P(AMS+)", f"{mean_prob:.3f}",
                               help="Average AMS+ probability across predicted subjects")
 
-                    # ── Visualisations ─────────────────────────────────────
                     fig3, axes3 = plt.subplots(1, 3, figsize=(14, 4))
 
-                    # Plot 1: Prediction count
                     ax = axes3[0]
                     labels_plot = []
                     counts_plot = []
@@ -435,7 +436,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     ax.set_ylim(0, max(counts_plot) * 1.25)
                     for s in ["top", "right"]: ax.spines[s].set_visible(False)
 
-                    # Plot 2: Probability bar per subject
                     ax = axes3[1]
                     subj_labels = [str(s) for s in results_df["subject_id"].values]
                     bar_colors  = ["#D62728" if p == 1 else "#1F77B4" for p in preds]
@@ -449,7 +449,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", fontsize=8)
                     for s in ["top", "right"]: ax.spines[s].set_visible(False)
 
-                    # Plot 3: Probability histogram
                     ax = axes3[2]
                     if n_complete > 1:
                         ax.hist(probs, bins=min(8, n_complete), color="#4C72B0",
@@ -467,10 +466,8 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     st.pyplot(fig3, use_container_width=True)
                     plt.close()
 
-                    # ── Full output table (predicted + flagged together) ───
                     st.markdown("### 📋 Full Subject Report (All Subjects)")
 
-                    # Build combined table
                     all_report = raw_df[["subject_id"]].copy()
                     pred_map   = dict(zip(complete_df["subject_id"].values,
                                          zip(["AMS+" if p == 1 else "AMS-" for p in preds],
@@ -505,7 +502,6 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                         use_container_width=True,
                     )
 
-                    # ── Downloads ──────────────────────────────────────────
                     st.markdown("### ⬇️ Download Results")
                     dl1, dl2 = st.columns(2)
 
@@ -536,9 +532,9 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 
 
 # ══════════════════════════════════════════════════════════════════════
-# TAB 3 — Model information
+# TAB 2 — Model information
 # ══════════════════════════════════════════════════════════════════════
-with tab3:
+with tab2:
     st.markdown('<div class="section-header">📈 Model Architecture & Validation</div>', unsafe_allow_html=True)
 
     col_a, col_b = st.columns(2)
@@ -609,15 +605,14 @@ Additional engineered features:
 - **PCA components** — capturing residual transcriptomic variance
 """)
 
-    # Visualise feature importance from model coefficients if loaded
-    bundle3 = get_model_bundle()
-    if bundle3 and hasattr(bundle3["model"], "coef_"):
+    bundle2 = get_model_bundle()
+    if bundle2 and hasattr(bundle2["model"], "coef_"):
         st.markdown('<div class="section-header">📊 Model Coefficients (Global Feature Importance)</div>', unsafe_allow_html=True)
-        model3     = bundle3["model"]
-        feat_names3 = bundle3["feat_names"]
-        coefs      = model3.coef_[0]
-        coef_df    = pd.DataFrame({
-            "Feature": feat_names3,
+        model2      = bundle2["model"]
+        feat_names2 = bundle2["feat_names"]
+        coefs       = model2.coef_[0]
+        coef_df     = pd.DataFrame({
+            "Feature": feat_names2,
             "Coefficient": coefs,
             "|Coefficient|": np.abs(coefs),
         }).sort_values("|Coefficient|", ascending=False).head(20)
@@ -644,46 +639,3 @@ Additional engineered features:
         plt.close()
 
         st.dataframe(coef_df.reset_index(drop=True).round(4), use_container_width=True)
-
-
-# ══════════════════════════════════════════════════════════════════════
-# TAB 4 — About
-# ══════════════════════════════════════════════════════════════════════
-with tab4:
-    st.markdown('<div class="section-header">📋 Project Overview</div>', unsafe_allow_html=True)
-    st.markdown("""
-This app deploys the **Logistic Regression** model developed for **Acute Mountain Sickness (AMS) susceptibility prediction** using pre-exposure baseline transcriptomic and physiological data.
-
-### Project Pipeline
-
-| Notebook | Purpose |
-|---|---|
-| **NB1** — Data Integration & Cleaning | Merge physiology + gene expression, compute delta features |
-| **NB2** — Baseline Biomarker & Delta Correlation | Differential expression, gene–physiology Spearman correlations, bootstrap stability |
-| **NB3** — Feature Engineering | Multi-criteria gene selection, composite score construction, PCA, scaling |
-| **NB4** — Classification | Nested LOOCV, RF + LR training, SHAP explainability, model serialisation |
-| **NB5** — Visualisation & Interpretation | Centralised plots and biological interpretation |
-
-### Cohort
-- **n=21** subjects for baseline (BL) matrix — includes subjects 3 & 4 (intact baseline)
-- **n=19** for delta/combined matrices — subjects 3 & 4 excluded (corrupted D1 data)
-- **AMS+:** 16 | **AMS-:** 5 (BL matrix)
-
-### Applications
-- High-altitude military deployment screening
-- Expedition medicine pre-screening
-- Precision healthcare for altitude-related conditions
-
-### Limitations
-- Small sample size (n=21) — validate in an independent cohort before deployment
-- Class imbalance (16:5) — balanced weights applied; AUC and MCC preferred over accuracy
-- Gene expression requires RNA-seq profiling — operational feasibility depends on turnaround time
-""")
-
-    st.markdown("""
-<div class="warning-box">
-⚠️ <b>Disclaimer:</b> This tool is intended for research and educational purposes only. 
-It should not be used as the sole basis for clinical or operational medical decisions.
-Validate with an independent cohort and consult qualified medical professionals before any deployment.
-</div>
-""", unsafe_allow_html=True)
