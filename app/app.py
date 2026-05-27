@@ -333,7 +333,7 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     flagged_df = flagged_df.reset_index(drop=True)
 
                     st.dataframe(
-                        flagged_df.style.applymap(
+                        flagged_df.style.map(
                             lambda v: "background-color: #fff3cd; color: #856404;",
                             subset=["Missing_Count"],
                         ),
