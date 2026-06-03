@@ -1,6 +1,7 @@
 """
 AMS Susceptibility Prediction — Streamlit App
 Logistic Regression deployment | Baseline Features
+Theme-aware: supports both light and dark mode + manual toggle
 """
 
 import streamlit as st
@@ -21,116 +22,317 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
+# ── Theme state ───────────────────────────────────────────────────────────────
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = True   # default to dark
+
+def toggle_theme():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+
+is_dark = st.session_state.dark_mode
+
+# ── Theme color palettes ──────────────────────────────────────────────────────
+if is_dark:
+    # ── Dark theme colours ────────────────────────────────────────────────────
+    BG_PAGE        = "#0d0d1a"
+    BG_SIDEBAR     = "#0f0f1a"
+    BG_CARD        = "#1e1e2e"
+    BG_INFO        = "#1a3a5c"
+    BG_WARN        = "#3a2e00"
+    BG_SECTION     = "#0d0d1a"
+
+    TEXT_PRIMARY   = "#FFFFFF"
+    TEXT_SECONDARY = "#E0E0E0"
+    TEXT_MUTED     = "#B0C4DE"
+    TEXT_INFO      = "#B3E5FC"
+    TEXT_WARN      = "#FFE082"
+    TEXT_CODE      = "#FFD54F"
+
+    ACCENT_BLUE    = "#7EB8F7"
+    ACCENT_CYAN    = "#4FC3F7"
+    BORDER_INFO    = "#4FC3F7"
+    BORDER_WARN    = "#FFD54F"
+    BORDER_CARD    = "#7EB8F7"
+
+    RISK_HIGH_BG   = "linear-gradient(135deg, #ff4b4b22, #ff4b4b44)"
+    RISK_HIGH_BOR  = "#FF6B6B"
+    RISK_LOW_BG    = "linear-gradient(135deg, #4FC3F722, #4FC3F744)"
+    RISK_LOW_BOR   = "#4FC3F7"
+
+    TAB_COLOR      = "#B0C4DE"
+    TAB_ACTIVE     = "#7EB8F7"
+
+    TH_BG          = "#1a1a2e"
+    TH_COLOR       = "#7EB8F7"
+    TD_COLOR       = "#E0E0E0"
+    CODE_BG        = "#2a2a3e"
+
+    TOGGLE_LABEL   = "☀️ Switch to Light Mode"
+    MPL_STYLE      = "dark_background"
+    MPL_TEXT       = "white"
+    MPL_GRID       = "#444"
+    MPL_SPINE      = "#555"
+else:
+    # ── Light theme colours ───────────────────────────────────────────────────
+    BG_PAGE        = "#f5f7fa"
+    BG_SIDEBAR     = "#eef1f7"
+    BG_CARD        = "#ffffff"
+    BG_INFO        = "#e3f2fd"
+    BG_WARN        = "#fff8e1"
+    BG_SECTION     = "#f5f7fa"
+
+    TEXT_PRIMARY   = "#1a1a2e"
+    TEXT_SECONDARY = "#2c3e50"
+    TEXT_MUTED     = "#546e7a"
+    TEXT_INFO      = "#0d47a1"
+    TEXT_WARN      = "#e65100"
+    TEXT_CODE      = "#bf360c"
+
+    ACCENT_BLUE    = "#1565c0"
+    ACCENT_CYAN    = "#0277bd"
+    BORDER_INFO    = "#0277bd"
+    BORDER_WARN    = "#f9a825"
+    BORDER_CARD    = "#1565c0"
+
+    RISK_HIGH_BG   = "linear-gradient(135deg, #ffebee, #ffcdd2)"
+    RISK_HIGH_BOR  = "#e53935"
+    RISK_LOW_BG    = "linear-gradient(135deg, #e3f2fd, #bbdefb)"
+    RISK_LOW_BOR   = "#1565c0"
+
+    TAB_COLOR      = "#546e7a"
+    TAB_ACTIVE     = "#1565c0"
+
+    TH_BG          = "#e8edf5"
+    TH_COLOR       = "#1565c0"
+    TD_COLOR       = "#2c3e50"
+    CODE_BG        = "#f0f4f8"
+
+    TOGGLE_LABEL   = "🌙 Switch to Dark Mode"
+    MPL_STYLE      = "seaborn-v0_8-whitegrid"
+    MPL_TEXT       = "#1a1a2e"
+    MPL_GRID       = "#ccc"
+    MPL_SPINE      = "#aaa"
+
+
+# ── Dynamic CSS injection ─────────────────────────────────────────────────────
+st.markdown(f"""
 <style>
-    .main-header {
+    /* ── Page background ── */
+    .stApp {{
+        background-color: {BG_PAGE} !important;
+    }}
+    .main .block-container {{
+        background-color: {BG_PAGE} !important;
+    }}
+
+    /* ── Sidebar ── */
+    div[data-testid="stSidebar"] {{
+        background: {BG_SIDEBAR} !important;
+    }}
+    div[data-testid="stSidebar"] * {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+    div[data-testid="stSidebar"] h2,
+    div[data-testid="stSidebar"] h3 {{
+        color: {ACCENT_BLUE} !important;
+    }}
+    div[data-testid="stSidebar"] table th {{
+        color: {ACCENT_BLUE} !important;
+        background-color: {TH_BG} !important;
+    }}
+    div[data-testid="stSidebar"] table td {{
+        color: {TD_COLOR} !important;
+    }}
+
+    /* ── Main headings ── */
+    .main-header {{
         font-size: 2.2rem;
         font-weight: 700;
-        color: #FFFFFF;
+        color: {TEXT_PRIMARY};
         margin-bottom: 0.2rem;
-    }
-    .sub-header {
+    }}
+    .sub-header {{
         font-size: 1.0rem;
-        color: #E0E0E0;
+        color: {TEXT_MUTED};
         margin-bottom: 1.5rem;
-    }
-    h2 {
-        color: #7EB8F7 !important;
+    }}
+    h1, h2 {{
+        color: {ACCENT_BLUE} !important;
         font-weight: 800 !important;
-    }
-    h3 {
-        color: #7EB8F7 !important;
+    }}
+    h3 {{
+        color: {ACCENT_BLUE} !important;
         font-weight: 700 !important;
         font-size: 1.15rem !important;
         margin-top: 1.2rem !important;
         margin-bottom: 0.5rem !important;
-    }
-    .risk-high {
-        background: linear-gradient(135deg, #ff4b4b22, #ff4b4b44);
-        border: 2px solid #FF6B6B;
+    }}
+
+    /* ── Risk boxes ── */
+    .risk-high {{
+        background: {RISK_HIGH_BG};
+        border: 2px solid {RISK_HIGH_BOR};
         border-radius: 12px;
         padding: 1.2rem 1.5rem;
         text-align: center;
-    }
-    .risk-low {
-        background: linear-gradient(135deg, #4FC3F722, #4FC3F744);
-        border: 2px solid #4FC3F7;
+    }}
+    .risk-low {{
+        background: {RISK_LOW_BG};
+        border: 2px solid {RISK_LOW_BOR};
         border-radius: 12px;
         padding: 1.2rem 1.5rem;
         text-align: center;
-    }
-    .metric-card {
-        background: #1e1e2e;
+    }}
+
+    /* ── Metric card ── */
+    .metric-card {{
+        background: {BG_CARD};
         border-radius: 8px;
         padding: 0.8rem 1rem;
-        border-left: 4px solid #7EB8F7;
+        border-left: 4px solid {BORDER_CARD};
         margin-bottom: 0.5rem;
-    }
-    .section-header {
+    }}
+
+    /* ── Section header ── */
+    .section-header {{
         font-size: 1.2rem;
         font-weight: 700;
-        color: #7EB8F7;
-        border-bottom: 3px solid #7EB8F7;
+        color: {ACCENT_BLUE};
+        border-bottom: 3px solid {ACCENT_BLUE};
         padding-bottom: 0.4rem;
         margin-top: 1.5rem;
         margin-bottom: 1rem;
         letter-spacing: 0.01em;
-    }
-    .info-box {
-        background: #1a3a5c;
-        border-left: 4px solid #4FC3F7;
+    }}
+
+    /* ── Info / warning boxes ── */
+    .info-box {{
+        background: {BG_INFO};
+        border-left: 4px solid {BORDER_INFO};
         padding: 0.8rem 1rem;
         border-radius: 0 8px 8px 0;
         font-size: 0.9rem;
-        color: #B3E5FC;
-    }
-    .warning-box {
-        background: #3a2e00;
-        border-left: 4px solid #FFD54F;
+        color: {TEXT_INFO};
+    }}
+    .warning-box {{
+        background: {BG_WARN};
+        border-left: 4px solid {BORDER_WARN};
         padding: 0.8rem 1rem;
         border-radius: 0 8px 8px 0;
         font-size: 0.9rem;
-        color: #FFE082;
-    }
-    div[data-testid="stSidebar"] {
-        background: #0f0f1a;
-    }
-    .stTabs [data-baseweb="tab"] {
+        color: {TEXT_WARN};
+    }}
+
+    /* ── Tabs ── */
+    .stTabs [data-baseweb="tab"] {{
         font-size: 0.95rem;
         font-weight: 500;
-        color: #B0C4DE;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #7EB8F7 !important;
-        border-bottom: 3px solid #7EB8F7 !important;
-    }
-    p, li {
-        color: #E0E0E0;
-    }
-    .stMarkdown p {
-        color: #E0E0E0 !important;
-    }
-    thead tr th {
-        color: #7EB8F7 !important;
+        color: {TAB_COLOR} !important;
+    }}
+    .stTabs [aria-selected="true"] {{
+        color: {TAB_ACTIVE} !important;
+        border-bottom: 3px solid {TAB_ACTIVE} !important;
+    }}
+
+    /* ── Body text ── */
+    p, li {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+    .stMarkdown p {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+
+    /* ── Tables ── */
+    thead tr th {{
+        color: {TH_COLOR} !important;
         font-weight: 700 !important;
-        background-color: #1a1a2e !important;
-    }
-    tbody tr td {
-        color: #E0E0E0 !important;
-    }
-    code {
-        color: #FFD54F !important;
-        background-color: #2a2a3e !important;
+        background-color: {TH_BG} !important;
+    }}
+    tbody tr td {{
+        color: {TD_COLOR} !important;
+    }}
+
+    /* ── Code ── */
+    code {{
+        color: {TEXT_CODE} !important;
+        background-color: {CODE_BG} !important;
         padding: 0.1rem 0.3rem;
         border-radius: 4px;
-    }
-    .stMetric label {
-        color: #B0C4DE !important;
+    }}
+
+    /* ── Streamlit metric labels ── */
+    .stMetric label {{
+        color: {TEXT_MUTED} !important;
         font-weight: 600 !important;
-    }
+    }}
+    .stMetric [data-testid="metric-container"] {{
+        background-color: {BG_CARD};
+        border-radius: 8px;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid {BORDER_CARD}44;
+    }}
+
+    /* ── Dataframes ── */
+    .stDataFrame {{
+        background-color: {BG_CARD} !important;
+    }}
+
+    /* ── Input widgets ── */
+    .stFileUploader label,
+    .stSelectbox label,
+    .stTextInput label {{
+        color: {TEXT_SECONDARY} !important;
+    }}
+
+    /* ── Theme toggle button ── */
+    .theme-toggle-btn button {{
+        background: {BG_CARD} !important;
+        color: {TEXT_PRIMARY} !important;
+        border: 2px solid {ACCENT_BLUE} !important;
+        border-radius: 20px !important;
+        font-weight: 600 !important;
+        padding: 0.3rem 1rem !important;
+        transition: all 0.2s ease !important;
+    }}
+    .theme-toggle-btn button:hover {{
+        background: {ACCENT_BLUE} !important;
+        color: {BG_PAGE} !important;
+    }}
+
+    /* ── Expander ── */
+    .streamlit-expanderHeader {{
+        color: {TEXT_SECONDARY} !important;
+        background-color: {BG_CARD} !important;
+    }}
+    .streamlit-expanderContent {{
+        background-color: {BG_CARD} !important;
+    }}
+
+    /* ── Alert / info boxes from st.info / st.error ── */
+    div[data-testid="stNotificationContent"] p {{
+        color: inherit !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
+
+
+# ── Matplotlib theme helper ───────────────────────────────────────────────────
+def apply_mpl_theme(fig, axes_list=None):
+    """Apply consistent matplotlib colours matching the current UI theme."""
+    fig.patch.set_facecolor(BG_PAGE if not is_dark else "#0d0d1a")
+    if axes_list is None:
+        axes_list = fig.get_axes()
+    for ax in axes_list:
+        ax.set_facecolor(BG_CARD)
+        ax.tick_params(colors=MPL_TEXT)
+        ax.xaxis.label.set_color(MPL_TEXT)
+        ax.yaxis.label.set_color(MPL_TEXT)
+        ax.title.set_color(MPL_TEXT)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(MPL_SPINE)
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_color(MPL_TEXT)
+
 
 # ── Load model ─────────────────────────────────────────────────────────────────
 @st.cache_resource
@@ -155,10 +357,10 @@ def get_model_bundle():
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/mountain.png", width=72)
-    st.markdown("## 🏔️ AMS Risk Predictor")
+    st.markdown(f"## 🏔️ AMS Risk Predictor")
     st.markdown("**Logistic Regression** | Baseline Features")
     st.markdown("---")
-    st.markdown("""
+    st.markdown(f"""
 **Model Performance (Nested LOOCV, n=21)**
 
 | Metric | Value |
@@ -171,22 +373,45 @@ with st.sidebar:
 | False Negatives | **0** |
 """)
     st.markdown("---")
-    st.markdown("""
+    st.markdown(f"""
 <div class="warning-box">
 ⚠️ <b>Research use only.</b> Validate with an independent cohort before clinical deployment.
 </div>
 """, unsafe_allow_html=True)
     st.markdown("")
-    st.markdown("""
+    st.markdown(f"""
 <div class="info-box">
 ℹ️ AMS = Acute Mountain Sickness. Model uses pre-exposure baseline gene expression + physiology.
 </div>
 """, unsafe_allow_html=True)
 
+    st.markdown("---")
+    # ── Theme toggle in sidebar ───────────────────────────────────────────────
+    st.markdown('<div class="theme-toggle-btn">', unsafe_allow_html=True)
+    st.button(TOGGLE_LABEL, on_click=toggle_theme, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"<small style='color:{TEXT_MUTED};'>Currently: {'🌙 Dark Mode' if is_dark else '☀️ Light Mode'}</small>",
+        unsafe_allow_html=True,
+    )
+
 
 # ── Header ─────────────────────────────────────────────────────────────────────
-st.markdown('<div class="main-header">🏔️ AMS Susceptibility Prediction</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Logistic Regression · Baseline Transcriptomic + Physiological Features · Nested LOOCV Validated</div>', unsafe_allow_html=True)
+header_col, toggle_col = st.columns([5, 1])
+with header_col:
+    st.markdown(f'<div class="main-header">🏔️ AMS Susceptibility Prediction</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sub-header">Logistic Regression · Baseline Transcriptomic + Physiological Features · Nested LOOCV Validated</div>', unsafe_allow_html=True)
+with toggle_col:
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown('<div class="theme-toggle-btn">', unsafe_allow_html=True)
+    st.button(
+        "☀️ Light" if is_dark else "🌙 Dark",
+        on_click=toggle_theme,
+        key="header_toggle",
+        help="Toggle light/dark theme",
+        use_container_width=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
 tab1, tab2 = st.tabs(["📊 Batch Predict (CSV)", "📈 Model Info"])
@@ -197,7 +422,7 @@ tab1, tab2 = st.tabs(["📊 Batch Predict (CSV)", "📈 Model Info"])
 # ══════════════════════════════════════════════════════════════════════
 with tab1:
     st.markdown('<div class="section-header">📊 Batch Prediction — CSV or Excel Upload</div>', unsafe_allow_html=True)
-    st.markdown("""
+    st.markdown(f"""
 Upload a **CSV or Excel file** where:
 - **Column 1** → `subject_id` (non-negative integer, unique per row)
 - **Remaining columns** → feature values (one column per model feature)
@@ -209,7 +434,7 @@ Subjects with **any missing cell** will be **flagged and skipped** — predictio
     bundle1 = get_model_bundle()
 
     if bundle1 is None:
-        st.markdown("""
+        st.markdown(f"""
 <div class="info-box">
 No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
 </div>
@@ -436,12 +661,14 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                     m3.metric("Mean P(AMS+)", f"{mean_prob:.3f}",
                               help="Average AMS+ probability across predicted subjects")
 
-                    fig3, axes3 = plt.subplots(1, 3, figsize=(14, 4))
+                    # ── Charts — theme-aware ───────────────────────────────
+                    fig3, axes3 = plt.subplots(1, 3, figsize=(14, 4),
+                                               facecolor=BG_PAGE if not is_dark else "#0d0d1a")
+                    apply_mpl_theme(fig3, list(axes3))
 
                     ax = axes3[0]
-                    labels_plot = []
-                    counts_plot = []
-                    colors_plot = []
+                    ax.set_facecolor(BG_CARD)
+                    labels_plot, counts_plot, colors_plot = [], [], []
                     if n_pos > 0:
                         labels_plot.append("AMS+"); counts_plot.append(n_pos); colors_plot.append("#D62728")
                     if n_neg > 0:
@@ -450,36 +677,41 @@ No model found in <code>models/final_model_LR.pkl</code>. Upload it below.
                                   edgecolor="white", width=0.5)
                     for bar, cnt in zip(bars, counts_plot):
                         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.05,
-                                str(cnt), ha="center", va="bottom", fontweight="bold", fontsize=12)
-                    ax.set_title("Prediction Distribution", fontweight="bold", fontsize=11)
-                    ax.set_ylabel("Number of Subjects")
+                                str(cnt), ha="center", va="bottom",
+                                fontweight="bold", fontsize=12, color=MPL_TEXT)
+                    ax.set_title("Prediction Distribution", fontweight="bold", fontsize=11, color=MPL_TEXT)
+                    ax.set_ylabel("Number of Subjects", color=MPL_TEXT)
                     ax.set_ylim(0, max(counts_plot) * 1.25)
                     for s in ["top", "right"]: ax.spines[s].set_visible(False)
 
                     ax = axes3[1]
+                    ax.set_facecolor(BG_CARD)
                     subj_labels = [str(s) for s in results_df["subject_id"].values]
                     bar_colors  = ["#D62728" if p == 1 else "#1F77B4" for p in preds]
                     ax.bar(subj_labels, probs, color=bar_colors, alpha=0.82, edgecolor="white")
-                    ax.axhline(0.5, color="black", lw=1.2, ls="--", alpha=0.6, label="Threshold (0.5)")
+                    ax.axhline(0.5, color=MPL_TEXT, lw=1.2, ls="--", alpha=0.6, label="Threshold (0.5)")
                     ax.set_ylim(0, 1)
-                    ax.set_xlabel("Subject ID")
-                    ax.set_ylabel("P(AMS+)")
-                    ax.set_title("AMS+ Probability per Subject", fontweight="bold", fontsize=11)
-                    ax.legend(fontsize=8)
-                    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", fontsize=8)
+                    ax.set_xlabel("Subject ID", color=MPL_TEXT)
+                    ax.set_ylabel("P(AMS+)", color=MPL_TEXT)
+                    ax.set_title("AMS+ Probability per Subject", fontweight="bold", fontsize=11, color=MPL_TEXT)
+                    ax.legend(fontsize=8, labelcolor=MPL_TEXT,
+                              facecolor=BG_CARD, edgecolor=MPL_SPINE)
+                    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", fontsize=8, color=MPL_TEXT)
                     for s in ["top", "right"]: ax.spines[s].set_visible(False)
 
                     ax = axes3[2]
+                    ax.set_facecolor(BG_CARD)
                     if n_complete > 1:
                         ax.hist(probs, bins=min(8, n_complete), color="#4C72B0",
                                 alpha=0.75, edgecolor="white")
                     else:
                         ax.bar([probs[0]], [1], color="#4C72B0", alpha=0.75, width=0.05)
                     ax.axvline(0.5, color="red", ls="--", lw=1.5, label="Threshold")
-                    ax.set_xlabel("P(AMS+)")
-                    ax.set_ylabel("Count")
-                    ax.set_title("Probability Distribution", fontweight="bold", fontsize=11)
-                    ax.legend(fontsize=8)
+                    ax.set_xlabel("P(AMS+)", color=MPL_TEXT)
+                    ax.set_ylabel("Count", color=MPL_TEXT)
+                    ax.set_title("Probability Distribution", fontweight="bold", fontsize=11, color=MPL_TEXT)
+                    ax.legend(fontsize=8, labelcolor=MPL_TEXT,
+                              facecolor=BG_CARD, edgecolor=MPL_SPINE)
                     for s in ["top", "right"]: ax.spines[s].set_visible(False)
 
                     plt.tight_layout()
@@ -637,21 +869,28 @@ Additional engineered features:
             "|Coefficient|": np.abs(coefs),
         }).sort_values("|Coefficient|", ascending=False).head(20)
 
-        fig4, ax4 = plt.subplots(figsize=(9, 6))
+        fig4, ax4 = plt.subplots(figsize=(9, 6),
+                                  facecolor=BG_PAGE if not is_dark else "#0d0d1a")
+        apply_mpl_theme(fig4, [ax4])
+        ax4.set_facecolor(BG_CARD)
+
         colors4 = ["#D62728" if v > 0 else "#1F77B4" for v in coef_df["Coefficient"].values[::-1]]
         ax4.barh(range(len(coef_df)), coef_df["Coefficient"].values[::-1],
                  color=colors4, alpha=0.82, edgecolor="white")
         ax4.set_yticks(range(len(coef_df)))
-        ax4.set_yticklabels([f[:30] for f in coef_df["Feature"].values[::-1]], fontsize=8)
-        ax4.axvline(0, color="grey", lw=0.8)
-        ax4.set_xlabel("Coefficient (positive = increases AMS+ risk)", fontsize=9)
+        ax4.set_yticklabels([f[:30] for f in coef_df["Feature"].values[::-1]],
+                            fontsize=8, color=MPL_TEXT)
+        ax4.axvline(0, color=MPL_SPINE, lw=0.8)
+        ax4.set_xlabel("Coefficient (positive = increases AMS+ risk)",
+                       fontsize=9, color=MPL_TEXT)
         ax4.set_title("Top 20 LR Feature Coefficients\n(red = AMS+ risk ↑ | blue = AMS+ risk ↓)",
-                      fontsize=10, fontweight="bold")
+                      fontsize=10, fontweight="bold", color=MPL_TEXT)
         patches = [
             mpatches.Patch(color="#D62728", label="Increases AMS+ risk"),
             mpatches.Patch(color="#1F77B4", label="Decreases AMS+ risk"),
         ]
-        ax4.legend(handles=patches, fontsize=8)
+        ax4.legend(handles=patches, fontsize=8, labelcolor=MPL_TEXT,
+                   facecolor=BG_CARD, edgecolor=MPL_SPINE)
         for spine in ["top", "right"]:
             ax4.spines[spine].set_visible(False)
         plt.tight_layout()
